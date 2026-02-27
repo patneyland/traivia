@@ -8,10 +8,7 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@trivia/shared": ["../shared/src/index.ts"]
-    }
+    "types": ["vite/client"]
   },
   "include": ["src"]
 }
