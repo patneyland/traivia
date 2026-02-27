@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Question } from "@trivia/shared";
+import type { Question, GenerationStage } from "@trivia/shared";
 import { createAnthropicClient } from "./client";
 import { PROMPTS } from "./prompts";
 
@@ -43,7 +43,7 @@ const DistractorSchema = z.object({
 
 const MODEL = "claude-sonnet-4-20250514";
 
-type ProgressFn = (payload: { stage: string; message: string; percent: number }) => void;
+type ProgressFn = (payload: { stage: GenerationStage; message: string; percent: number }) => void;
 
 function interpolate(template: string, vars: Record<string, string>): string {
   return Object.entries(vars).reduce(
@@ -68,7 +68,7 @@ async function callClaude(prompt: string, allowSearch = false): Promise<string> 
     model: MODEL,
     max_tokens: 4096,
     temperature: 0.4,
-    tools: allowSearch ? [{ type: "web_search_20250305" as const, name: "web_search", max_uses: 5 }] : undefined,
+    tools: allowSearch ? [{ type: "web_search_20250305", name: "web_search", max_uses: 5 } as any] : undefined,
     messages: [{ role: "user", content: prompt }],
   });
 
