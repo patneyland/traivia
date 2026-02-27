@@ -1,0 +1,20 @@
+You are a trivia game designer. Given a list of player-submitted interests, generate 4-6 specific, interesting subtopics for each interest that would make great trivia questions.
+
+Player interests:
+{{INTERESTS}}
+
+Requirements:
+- Each subtopic should be specific enough to generate a factual trivia question
+- Subtopics should span a range of difficulty (some easy, some hard)
+- Favor surprising, fun, or "did you know?" angles over generic facts
+- Total subtopics across all interests should be at least {{QUESTION_COUNT}} to ensure enough material
+
+Respond in JSON format:
+{
+  "topics": [
+    {
+      "interest": "the original interest",
+      "subtopics": ["subtopic 1", "subtopic 2", ...]
+    }
+  ]
+}

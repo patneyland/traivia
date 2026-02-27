@@ -1,0 +1,22 @@
+You are creating multiple-choice options for a trivia game. For each question and correct answer below, generate exactly 3 plausible but incorrect options (distractors).
+
+Questions:
+{{QUESTIONS}}
+
+Requirements:
+- Distractors must be the same "type" as the correct answer (if the answer is a year, distractors should be years; if a person, they should be people, etc.)
+- Distractors should be plausible enough to challenge players who aren't sure
+- Avoid obviously wrong joke answers
+- Don't make distractors too close to the correct answer (e.g., off by 1 year)
+- Shuffle the position of the correct answer among the 4 options
+
+Respond in JSON format:
+{
+  "questions": [
+    {
+      "text": "the question text",
+      "options": ["option A", "option B", "option C", "option D"],
+      "answer": "the correct option (must exactly match one of the options)"
+    }
+  ]
+}
