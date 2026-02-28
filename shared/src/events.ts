@@ -22,7 +22,7 @@ export type ServerToClientEvents = {
 };
 
 export type ClientToServerEvents = {
-  create_room: (payload: { playerName: string }) => void;
+  create_room: (payload: { hostName?: string }) => void;
   join_room: (payload: { code: string; playerName: string }) => void;
   update_settings: (payload: { questionCount: number; timerSeconds: number }) => void;
   collect_interests: () => void;

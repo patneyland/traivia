@@ -20,6 +20,7 @@ import {
   getAnsweredCount,
   getRoomByCode,
   getRoomForPlayer,
+  isPlayerInRoom,
   joinRoom,
   recordAnswer,
   removePlayer,
@@ -89,6 +90,28 @@ function revealCurrentQuestion(
   setRoomState(room, "revealing");
 }
 
+function startCurrentQuestion(
+  io: Server<ClientToServerEvents, ServerToClientEvents>,
+  room: NonNullable<ReturnType<typeof getRoomByCode>>
+): boolean {
+  if (!room.questions[room.currentQuestion]) {
+    clearTimer(room.code);
+    setRoomState(room, "lobby");
+    io.to(room.code).emit("generation_error", {
+      message: "No questions were generated. Please try again.",
+    });
+    return false;
+  }
+
+  setRoomState(room, "playing");
+  startTimer(room, () => {
+    // Timer expired - auto-reveal, scoring unanswered players as 0
+    revealCurrentQuestion(room);
+    emitRoom(io, room.code);
+  });
+  return true;
+}
+
 export function registerSocketHandlers(
   io: Server<ClientToServerEvents, ServerToClientEvents>,
   socket: Socket<ClientToServerEvents, ServerToClientEvents>
@@ -96,10 +119,10 @@ export function registerSocketHandlers(
   socket.on("create_room", (payload) => {
     const parsed = CreateRoomSchema.safeParse(payload);
     if (!parsed.success) {
-      socket.emit("error", { message: "Invalid player name." });
+      socket.emit("error", { message: "Invalid host details." });
       return;
     }
-    const room = createRoom(socket.id, parsed.data.playerName);
+    const room = createRoom(socket.id);
     socket.join(room.code);
     socket.emit("room_joined", { room: publicRoom(room)!, playerId: socket.id });
   });
@@ -111,6 +134,18 @@ export function registerSocketHandlers(
       return;
     }
     const code = parsed.data.code.toUpperCase();
+    const existingRoom = getRoomByCode(code);
+    if (!existingRoom) {
+      socket.emit("error", { message: "Room not found." });
+      return;
+    }
+    if (existingRoom.hostId === socket.id) {
+      socket.emit("error", {
+        message: "Host controls the room and cannot join as a player.",
+      });
+      return;
+    }
+
     const room = joinRoom(code, socket.id, parsed.data.playerName);
     if (!room) {
       socket.emit("error", { message: "Room not found." });
@@ -140,7 +175,8 @@ export function registerSocketHandlers(
       resetForNewRound(room);
     }
     clearInterests(room);
-    setRoomState(room, "collecting_interests");
+    // Interest collection now happens directly in lobby for players.
+    setRoomState(room, "lobby");
     emitRoom(io, room.code);
   });
 
@@ -152,6 +188,10 @@ export function registerSocketHandlers(
     }
     const room = getRoomForPlayer(socket.id);
     if (!room) return;
+    if (!isPlayerInRoom(room, socket.id)) {
+      socket.emit("error", { message: "Only players can submit interests." });
+      return;
+    }
     setPlayerInterests(room, socket.id, parsed.data.interests);
     emitRoom(io, room.code);
   });
@@ -159,6 +199,10 @@ export function registerSocketHandlers(
   socket.on("start_game", async () => {
     const room = getRoomForPlayer(socket.id);
     if (!room || room.hostId !== socket.id) return;
+    if (room.players.length === 0) {
+      socket.emit("error", { message: "At least one player must join first." });
+      return;
+    }
     if (!allPlayersSubmitted(room)) {
       socket.emit("error", { message: "All players must submit interests." });
       return;
@@ -176,7 +220,7 @@ export function registerSocketHandlers(
         }
       );
       setRoomQuestions(room, questions);
-      setRoomState(room, "ready");
+      startCurrentQuestion(io, room);
       emitRoom(io, room.code);
     } catch (error) {
       console.error("[start_game] Question generation failed:", error);
@@ -197,6 +241,11 @@ export function registerSocketHandlers(
     }
     const room = getRoomForPlayer(socket.id);
     if (!room || room.state !== "playing") return;
+    if (!isPlayerInRoom(room, socket.id)) {
+      socket.emit("error", { message: "Only players can answer questions." });
+      return;
+    }
+
     const key = String(room.currentQuestion);
     if (room.answers[key]?.[socket.id]) return;
     recordAnswer(room, room.currentQuestion, socket.id, parsed.data);
@@ -225,7 +274,7 @@ export function registerSocketHandlers(
       setRoomState(room, "results");
     } else {
       advanceQuestion(room);
-      setRoomState(room, "ready");
+      startCurrentQuestion(io, room);
     }
     emitRoom(io, room.code);
   });
@@ -234,21 +283,24 @@ export function registerSocketHandlers(
     const room = getRoomForPlayer(socket.id);
     if (!room || room.hostId !== socket.id) return;
     if (room.state !== "ready") return;
-
-    setRoomState(room, "playing");
-    startTimer(room, () => {
-      // Timer expired — auto-reveal, scoring unanswered players as 0
-      revealCurrentQuestion(room);
-      emitRoom(io, room.code);
-    });
+    startCurrentQuestion(io, room);
     emitRoom(io, room.code);
   });
 
   socket.on("disconnect", () => {
-    const roomCode = getRoomForPlayer(socket.id)?.code;
+    const activeRoom = getRoomForPlayer(socket.id);
+    const roomCode = activeRoom?.code;
+    const wasHost = activeRoom?.hostId === socket.id;
     const room = removePlayer(socket.id);
+
+    if (wasHost && roomCode) {
+      io.to(roomCode).emit("error", { message: "Host disconnected. Room closed." });
+      io.in(roomCode).socketsLeave(roomCode);
+      clearTimer(roomCode);
+      return;
+    }
+
     if (!room && roomCode) {
-      // Room was deleted (last player left) — clean up timer
       clearTimer(roomCode);
       return;
     }

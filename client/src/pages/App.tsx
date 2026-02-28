@@ -1,14 +1,17 @@
 import { Route, Switch } from "wouter";
 import { Home } from "./Home";
+import { CreateRoom } from "./CreateRoom";
+import { JoinRoom } from "./JoinRoom";
 import { Room } from "./Room";
 
 export function App() {
   return (
-    <div className="min-h-screen px-4 py-6 md:px-10">
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/room/:code" component={Room} />
-      </Switch>
-    </div>
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/create-room" component={CreateRoom} />
+      <Route path="/join-room" component={JoinRoom} />
+      <Route path="/room/:code" component={Room} />
+      <Route component={Home} />
+    </Switch>
   );
 }

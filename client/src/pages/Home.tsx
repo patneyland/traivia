@@ -1,105 +1,82 @@
-import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { Button } from "../components/Button";
-import { Card } from "../components/Card";
-import { Input } from "../components/Input";
-import { socket } from "../lib/socket";
+import { Brain, Crown, Users } from "lucide-react";
 
 export function Home() {
   const [, navigate] = useLocation();
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const handleJoined = (payload: { room: { code: string } }) => {
-      navigate(`/room/${payload.room.code}`);
-    };
-
-    const handleError = (payload: { message: string }) => {
-      setError(payload.message);
-    };
-
-    socket.on("room_joined", handleJoined);
-    socket.on("error", handleError);
-    return () => {
-      socket.off("room_joined", handleJoined);
-      socket.off("error", handleError);
-    };
-  }, [navigate]);
 
   return (
-    <motion.div
-      className="mx-auto flex max-w-5xl flex-col gap-8"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <header className="text-center">
-        <h1 className="font-display text-5xl font-bold text-foreground md:text-7xl">
-          TRIVIA AI
-        </h1>
-        <p className="mt-2 text-lg text-foreground/70">
-          Every round is made just for your crew.
-        </p>
-      </header>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <h2 className="font-display text-2xl font-bold">Create a Room</h2>
-          <p className="mt-2 text-foreground/70">
-            Start a new game and invite friends.
-          </p>
-          <div className="mt-4 space-y-3">
-            <Input
-              placeholder="Your display name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-            <Button
-              className="w-full"
-              onClick={() => socket.emit("create_room", { playerName: name })}
-            >
-              Create Room
-            </Button>
+    <div className="h-screen overflow-hidden bg-gray-50 p-4">
+      <div className="mx-auto flex h-full w-full max-w-lg items-center justify-center">
+        <div className="w-full space-y-3">
+          <div className="space-y-1 text-center">
+            <div className="flex justify-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg border-[3px] border-gray-800">
+                <Brain className="h-6 w-6" />
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold">Trivia Quiz</h1>
+            <p className="text-sm text-gray-600">
+              AI-generated questions based on your interests
+            </p>
           </div>
-        </Card>
 
-        <Card>
-          <h2 className="font-display text-2xl font-bold">Join a Room</h2>
-          <p className="mt-2 text-foreground/70">
-            Enter the room code from your host.
-          </p>
-          <div className="mt-4 space-y-3">
-            <Input
-              placeholder="Room code"
-              value={code}
-              onChange={(event) => setCode(event.target.value.toUpperCase())}
-            />
-            <Input
-              placeholder="Your display name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() =>
-                socket.emit("join_room", { code: code.toUpperCase(), playerName: name })
-              }
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => navigate("/create-room")}
+              className="space-y-2 rounded-lg border-[3px] border-gray-800 bg-white p-4 text-left transition-colors hover:bg-gray-50"
             >
-              Join Room
-            </Button>
-          </div>
-        </Card>
-      </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-gray-800">
+                <Crown className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="mb-0.5 font-semibold">Host a Game</h2>
+                <p className="text-xs text-gray-600">
+                  Create a room and manage the trivia session
+                </p>
+              </div>
+            </button>
 
-      {error && (
-        <div className="rounded-3xl border-4 border-foreground bg-destructive/20 px-4 py-3 text-center font-semibold">
-          {error}
+            <button
+              onClick={() => navigate("/join-room")}
+              className="space-y-2 rounded-lg border-[3px] border-gray-800 bg-white p-4 text-left transition-colors hover:bg-gray-50"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-gray-800">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="mb-0.5 font-semibold">Join as Player</h2>
+                <p className="text-xs text-gray-600">
+                  Enter a room code to play trivia
+                </p>
+              </div>
+            </button>
+          </div>
+
+          <div className="space-y-2 rounded-lg border-2 border-gray-800 bg-white p-3">
+            <h3 className="text-sm font-semibold">How it works</h3>
+            <ul className="space-y-1.5">
+              <li className="flex items-center gap-2">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-gray-800 text-xs">
+                  1
+                </div>
+                <p className="text-sm">Create or join a room with friends</p>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-gray-800 text-xs">
+                  2
+                </div>
+                <p className="text-sm">Share 3 topics you&apos;re interested in</p>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-gray-800 text-xs">
+                  3
+                </div>
+                <p className="text-sm">Answer AI-generated trivia questions</p>
+              </li>
+            </ul>
+          </div>
         </div>
-      )}
-    </motion.div>
+      </div>
+    </div>
   );
 }

@@ -20,29 +20,28 @@ function randomCode(): string {
   return code;
 }
 
-function createPlayer(id: string, name: string, isHost: boolean): Player {
+function createPlayer(id: string, name: string): Player {
   return {
     id,
     name,
     score: 0,
     interests: [],
-    isHost,
+    isHost: false,
     hasSubmittedInterests: false,
   };
 }
 
-export function createRoom(playerId: string, playerName: string): Room {
+export function createRoom(playerId: string): Room {
   let code = randomCode();
   while (rooms.has(code)) {
     code = randomCode();
   }
 
-  const host = createPlayer(playerId, playerName, true);
   const room: Room = {
     code,
     hostId: playerId,
     state: "lobby",
-    players: [host],
+    players: [],
     questions: [],
     currentQuestion: 0,
     questionCount: DEFAULTS.questionCount,
@@ -69,7 +68,7 @@ export function joinRoom(
     return room;
   }
 
-  const player = createPlayer(playerId, playerName, false);
+  const player = createPlayer(playerId, playerName);
   room.players.push(player);
   playerToRoom.set(playerId, code);
   return room;
@@ -130,21 +129,19 @@ export function removePlayer(playerId: string): Room | null {
   if (!code) return null;
 
   const room = rooms.get(code);
+  playerToRoom.delete(playerId);
   if (!room) return null;
 
-  room.players = room.players.filter((player) => player.id !== playerId);
-  playerToRoom.delete(playerId);
-
-  if (room.players.length === 0) {
+  if (room.hostId === playerId) {
+    clearTimer(code);
+    room.players.forEach((player) => {
+      playerToRoom.delete(player.id);
+    });
     rooms.delete(code);
     return null;
   }
 
-  if (room.hostId === playerId) {
-    const nextHost = room.players[0];
-    nextHost.isHost = true;
-    room.hostId = nextHost.id;
-  }
+  room.players = room.players.filter((player) => player.id !== playerId);
 
   return room;
 }
@@ -190,10 +187,12 @@ export function advanceQuestion(room: Room): Room {
 }
 
 export function allPlayersSubmitted(room: Room): boolean {
+  if (room.players.length === 0) return false;
   return room.players.every((player) => player.hasSubmittedInterests);
 }
 
 export function allPlayersAnswered(room: Room): boolean {
+  if (room.players.length === 0) return false;
   const key = String(room.currentQuestion);
   const answered = room.answers[key] ?? {};
   return room.players.every((player) => player.id in answered);
@@ -202,7 +201,11 @@ export function allPlayersAnswered(room: Room): boolean {
 export function getAnsweredCount(room: Room): number {
   const key = String(room.currentQuestion);
   const answered = room.answers[key] ?? {};
-  return Object.keys(answered).length;
+  return room.players.filter((player) => player.id in answered).length;
+}
+
+export function isPlayerInRoom(room: Room, playerId: string): boolean {
+  return room.players.some((player) => player.id === playerId);
 }
 
 export function startTimer(

@@ -47,7 +47,7 @@ export const RoomSchema = z.object({
 });
 
 export const CreateRoomSchema = z.object({
-  playerName: z.string().min(1).max(24),
+  hostName: z.string().min(1).max(24).optional(),
 });
 
 export const JoinRoomSchema = z.object({
