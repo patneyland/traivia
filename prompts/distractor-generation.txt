@@ -4,16 +4,19 @@ Questions:
 {{QUESTIONS}}
 
 Requirements:
-- Distractors must be the same "type" as the correct answer (if the answer is a year, distractors should be years; if a person, they should be people, etc.)
-- Distractors should be plausible enough to challenge players who aren't sure
+- Distractors must be the same type as the correct answer (if the answer is a year, distractors should be years; if a person, they should be people, etc.)
+- Distractors should be plausible enough to challenge players who are unsure
 - Avoid obviously wrong joke answers
-- Don't make distractors too close to the correct answer (e.g., off by 1 year)
+- Do not make distractors too close to the correct answer (for example, off by 1 year)
 - Shuffle the position of the correct answer among the 4 options
+- Preserve and return the original "interest", "subInterest", and "text" fields unchanged
 
 Respond in JSON format:
 {
   "questions": [
     {
+      "interest": "the original interest",
+      "subInterest": "the original subInterest",
       "text": "the question text",
       "options": ["option A", "option B", "option C", "option D"],
       "answer": "the correct option (must exactly match one of the options)"

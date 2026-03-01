@@ -10,6 +10,8 @@ export const PlayerSchema = z.object({
 });
 
 export const QuestionSchema = z.object({
+  interest: z.string(),
+  subInterest: z.string(),
   text: z.string(),
   options: z.array(z.string()).length(4),
   answer: z.string(),

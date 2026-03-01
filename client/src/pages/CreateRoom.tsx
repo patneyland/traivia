@@ -107,18 +107,18 @@ export function CreateRoom() {
                 <input
                   id="questionCount"
                   type="number"
-                  min={10}
-                  max={40}
+                  min={5}
+                  max={50}
                   value={questionCount}
                   onChange={(event) => {
                     const value = Number.parseInt(event.target.value, 10);
                     if (!Number.isNaN(value)) {
-                      setQuestionCount(Math.max(10, Math.min(40, value)));
+                      setQuestionCount(Math.max(5, Math.min(50, value)));
                     }
                   }}
                   className="w-full rounded-lg border-2 border-gray-800 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2"
                 />
-                <p className="text-xs text-gray-500">Between 10 and 40</p>
+                <p className="text-xs text-gray-500">Between 5 and 50</p>
               </div>
 
               <div className="space-y-1.5 rounded-lg border-2 border-gray-800 bg-gray-50 p-3 text-sm">

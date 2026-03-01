@@ -58,6 +58,30 @@ function aiQuips(interests: string[]) {
   ];
 }
 
+function QuestionTopics({
+  interest,
+  subInterest,
+  isHost,
+}: {
+  interest: string;
+  subInterest: string;
+  isHost: boolean;
+}) {
+  const displayInterest = interest?.trim() || "General";
+  const displaySubInterest = subInterest?.trim() || "Mixed";
+
+  return (
+    <div className={`flex flex-wrap items-center gap-2 ${isHost ? "text-xl" : "text-xs"} font-medium`}>
+      <span className="rounded-full border-2 border-gray-800 bg-gray-100 px-3 py-1">
+        {displayInterest}
+      </span>
+      <span className="rounded-full border-2 border-gray-800 bg-yellow-50 px-3 py-1">
+        {displaySubInterest}
+      </span>
+    </div>
+  );
+}
+
 export function Room() {
   const [, params] = useRoute("/room/:code");
   const [, navigate] = useLocation();
@@ -427,6 +451,11 @@ export function Room() {
               <div
                 className={`rounded-lg border-[3px] border-gray-800 bg-white ${isHost ? "space-y-4 p-8" : "space-y-2 p-4"}`}
               >
+                <QuestionTopics
+                  interest={question.interest}
+                  subInterest={question.subInterest}
+                  isHost={isHost}
+                />
                 <h3 className={isHost ? "text-5xl font-semibold leading-tight" : "text-2xl font-semibold leading-tight"}>
                   {question.text}
                 </h3>
@@ -487,6 +516,11 @@ export function Room() {
             <div
               className={`rounded-lg border-[3px] border-gray-800 bg-white ${isHost ? "space-y-4 p-8 lg:col-span-3" : "space-y-3 p-4"}`}
             >
+              <QuestionTopics
+                interest={question.interest}
+                subInterest={question.subInterest}
+                isHost={isHost}
+              />
               <h3 className={isHost ? "text-5xl font-semibold leading-tight" : "text-2xl font-semibold leading-tight"}>
                 {question.text}
               </h3>
