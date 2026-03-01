@@ -217,7 +217,8 @@ export function registerSocketHandlers(
         room.questionCount,
         (progress) => {
           io.to(room.code).emit("generation_progress", progress);
-        }
+        },
+        { roomCode: room.code }
       );
       setRoomQuestions(room, questions);
       startCurrentQuestion(io, room);
